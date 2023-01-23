@@ -1,0 +1,50 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class RocketBehaviour : MonoBehaviour
+{
+    private Transform target;
+    private Vector3 moveDirection;
+    private float speed = 15.0f;
+    private bool homing;
+
+    private float rocketStrength = 15.0f;
+    private float aliveTimer = 5.0f;
+
+    // Update is called once per frame
+    void Update()
+    {
+        if(homing)
+        {
+            if(target != null)
+            {
+                moveDirection = (target.transform.position - transform.position).normalized;
+                transform.LookAt(target);
+            }
+            // prevent the rockets to stop mid-air when the target is destroyed
+            transform.position += moveDirection * speed * Time.deltaTime;
+        }
+    }
+
+    public void Fire(Transform homingTarget)
+    {
+        target = homingTarget;
+        homing = true;
+        Destroy(gameObject, aliveTimer);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(target != null)
+        {
+            if (collision.gameObject.CompareTag(target.tag))
+            {
+                Rigidbody targetRigidbody = collision.gameObject.GetComponent<Rigidbody>();
+                Vector3 away = -collision.contacts[0].normal;
+                targetRigidbody.AddForce(away * rocketStrength, ForceMode.Impulse);
+                Destroy(gameObject);
+            }
+        }
+    }
+}
